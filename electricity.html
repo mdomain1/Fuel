@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Fuel Efficiency</title>
+
+    <!-- Link d3.js library -->
+    <script src='https://d3js.org/d3.v5.min.js'></script>
+    <!-- Link d3.annotation library -->
+    <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+    <style> 
+        #tooltip {
+            opacity: 0;
+            position:  absolute;
+            text-align: left;
+            width: 150px; height: 60px;
+            background: white;
+            border: 0px;
+        }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body onload='init()'>
+<svg width=700 height=600 style="background-color:rgba(243, 250, 243, 0.986)">
+</svg>
+
+<div id="tooltip" opacity=0></div>
+<script>
+async function init() {
+
+// Get the raw data
+const data = await d3.csv("https://flunky.github.io/cars2017.csv");
+// Filter and sort data
+const all_electricity_data = data.filter((d) => (d.Fuel == "Electricity")).sort((a,b)=>(+b.AverageCityMPG - +a.AverageCityMPG));
+
+// console.log(all_electricity_data);
+/* d3.select("#mySlider")
+    .on("change", function(){
+    selectedValue = this.value;
+    console.log(selectedValue);
+    if (selectedValue == 0){
+        d3.select("#number")
+        .html("EngineCylinders: All");
+    } else {
+        d3.select("#number")
+            .html("EngineCylinders: " + selectedValue);
+    }
+    if (d3.set([0,4,6]).has(selectedValue)){
+        updateChart(selectedValue);
+    }
+}); */
+
+// X range
+var x = d3.scaleLog().domain([10,150]).range([0,500]);
+// Y range
+var y = d3.scaleLog().domain([10,150]).range([500,0]);
+
+var tooltip = d3.select("#tooltip");
+
+var svg = d3.select("body")
+            .select("svg");
+
+// Right navigation arrow
+var rightArrow = svg.append("g")
+    .attr("transform", "translate(650,250) scale(0.5, 1.0)")
+    .attr("class", "rightArrow")
+    .append("a")
+    .attr("xlink:href", "index.html")
+    .append("path")
+    .attr("d", "M 20 0 L 30 0 L 60 30 L 30 60 L20 60 L 50 30 Z")
+    .attr("fill", "lightgrey")
+    .attr("cursor", "pointer")
+    .on("mouseover", function() {
+        d3.select(this)
+        .attr("fill", "orange");
+    })
+    .on("mouseout", function() {
+        d3.select(this)
+        .attr("fill", "lightgrey");
+    });
+
+// Left navigation arrow
+var leftArrow = svg.append("g")
+    .attr("transform", "translate(50,310) scale(0.5, 1.0) rotate(180)")
+    .attr("class", "leftArrow")
+    .append("a")
+    .attr("xlink:href", "diesel.html")
+    .append("path")
+    .attr("d", "M 20 0 L 30 0 L 60 30 L 30 60 L20 60 L 50 30 Z")
+    .attr("fill", "lightgrey")
+    .attr("cursor", "pointer")
+    .on("mouseover", function() {
+        d3.select(this)
+        .attr("fill", "orange");
+    })
+    .on("mouseout", function() {
+        d3.select(this)
+        .attr("fill", "lightgrey");
+    });
+
+// Draw the bar chart
+var length = 500 / all_electricity_data.length;
+svg.append("g")
+   .attr("transform", "translate(50,50)")
+   .attr("class", "draw")
+   .selectAll("rect")
+   .data(all_electricity_data)
+   .enter()
+   .append("rect")
+   .attr("width", function (d) { return x(d.AverageCityMPG) + 2; })
+   .attr("height", length)
+   .attr("class", "electricity")
+   .attr("x", 0 )
+   .attr("y", function (d, i) { return i * length; })
+   .on("mouseover", mouseover)
+   .on("mouseout", mouseout);
+
+d3.select("svg")
+    .select(".draw")
+    .selectAll("text")
+    .data(all_electricity_data)
+    .enter()
+    .append("text")
+    .attr("x", function (d) { return x(d.AverageCityMPG); })
+    .attr("y", function (d, i) { return (500*i/all_electricity_data.length) + length*0.5 + 2; })
+    .attr("dy", ".05em")
+    .text(function (d) { return d.Make; })
+    .attr("text-anchor", "end")
+    .style("fill", "blue")
+    .style("font-size", "14px");
+
+// Callback function
+function mouseover(d, i) {
+    d3.select(this)
+        .attr("class", "highlight");
+
+    tooltip.style("opacity", 1)
+            .style("left", (d3.event.pageX)+"px")
+            .style("top", (d3.event.pageY)+"px")
+            .html("Make: " + d.Make + "<br/> Fuel: " + d.Fuel + "<br/> City mpg: " + d.AverageCityMPG);
+}
+
+// Callback function
+function mouseout(d, i) {
+    d3.select(this)
+        .attr("class", (d) => {
+            if (d.Fuel == 'Electricity') {
+                return "electricity";
+            } else if (d.Fuel == 'Diesel') {
+                return "diesel";
+            } else if (d.Fuel == 'Gasoline') {
+                return "gasoline";
+            } else {
+                return "circle";
+            }
+        });
+    
+    tooltip.style("opacity", 0)
+}
+
+// Features of the annotation
+const annotations = [
+    {
+        note: {
+        title: "Best City MPG vehicle: " + all_electricity_data[0].Make,
+        align: "left",
+        wrap: 125,
+        padding: 3
+        },
+        color: "darkslategrey",
+        x: x(all_electricity_data[0].AverageCityMPG)+45,
+        y: length/2+50,
+        dy: 30,
+        dx: 30
+    }
+    ]
+
+// Add annotation to the chart
+var makeAnnotations = d3.annotation().annotations(annotations)
+svg.append("g")
+    .attr("class", "annotation")
+    .style("font-size", "12px")
+    .call(makeAnnotations)
+
+// Bottom axis and label
+svg.append("text")
+    .attr("x", 450)
+    .attr("y", 585)
+    .attr("text-anchor", "end")
+    .attr("stroke", "black")
+    .text("Average City MPG")
+
+svg.append("g")
+    .attr("transform", "translate(50,550)")
+    .call(d3.axisBottom(x)
+    .tickValues([10,20,50,100,150])  
+    .tickFormat(d3.format("~s")));
+
+// Left axis and label
+svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -150)
+    .attr("y", 100)
+    .attr("dy", "-5.1em")
+    .attr("text-anchor", "end")
+    .attr("stroke", "black")
+    .text("Make");
+
+svg.append("text")
+    .attr("x", 220)
+    .attr("y", 40)
+    .attr("font-size", "24px")
+    .attr("stroke", "black")
+    .text("Electrical Engines");
+
+}
+
+</script>
+</body>
+</html>

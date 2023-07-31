@@ -1,0 +1,62 @@
+body {
+    animation: fadeIn 0.5s;
+}
+#number {
+    color: blue;
+    font-weight: bold;
+  }
+@keyframes transitionInX {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes transitionInY {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(-10px);}
+    100% { opacity: 1; transform: translateY(0);}
+}
+
+.circle {
+    fill: lightblue; 
+    stroke: black;
+} 
+.highlight {
+    fill: yellow; 
+    stroke: black;
+} 
+.electricity {
+    fill: green; 
+    stroke: white; 
+    opacity: 0.5;
+}
+.diesel {
+    fill: red; 
+    stroke: white; 
+    opacity: 0.5;
+}
+.gasoline {
+    fill: blue; 
+    stroke: white; 
+    opacity: 0.5;
+}
+.val {
+    stroke: purple;
+}
